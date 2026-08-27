@@ -3,8 +3,10 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
 
-export default defineConfig(() => {
+export default defineConfig(({command}) => {
   return {
+    // O GitHub Pages serve o projeto em /mirante-tax/. Em dev a raiz segue sendo /.
+    base: command === 'build' ? '/mirante-tax/' : '/',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
