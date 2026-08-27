@@ -6,7 +6,7 @@ import { MemoriaCalculoCard } from './MemoriaCalculoCard';
 import { PainelAlavancas } from './PainelAlavancas';
 import { VereditoCard } from './VereditoCard';
 import { ComparativoAnualModal } from './ComparativoAnualModal';
-import { ArrowLeft, Edit3, FileText, ArrowRightLeft, ChevronDown, ClipboardList, CalendarRange } from 'lucide-react';
+import { ArrowLeft, Edit3, FileText, ArrowRightLeft, ChevronDown, ClipboardList, CalendarRange, Share2 } from 'lucide-react';
 
 interface ProjecaoViewProps {
   empresa: Empresa;
@@ -15,6 +15,7 @@ interface ProjecaoViewProps {
   onEditarEmpresa: (empresa: Empresa) => void;
   onAbrirRelatorio: (empresa: Empresa) => void;
   onAbrirComparativoRegimes: (empresa: Empresa) => void;
+  onAbrirAcessoCliente: (empresa: Empresa) => void;
   onAtualizarAlavancasEmpresa: (empresaId: string, alavancas: AlavancasAtivas) => void;
   modoEscuro: boolean;
 }
@@ -33,6 +34,7 @@ export const ProjecaoView: React.FC<ProjecaoViewProps> = ({
   onEditarEmpresa,
   onAbrirRelatorio,
   onAbrirComparativoRegimes,
+  onAbrirAcessoCliente,
   onAtualizarAlavancasEmpresa,
   modoEscuro
 }) => {
@@ -112,6 +114,14 @@ export const ProjecaoView: React.FC<ProjecaoViewProps> = ({
             >
               <Edit3 className="w-3.5 h-3.5 text-textoSecundario" />
               <span>Parâmetros</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onAbrirAcessoCliente(empresa)}
+              className="px-3 py-1.5 bg-superficie border border-line rounded-lg text-xs text-textoPrimario hover:border-acento/50 transition-colors flex items-center gap-1.5"
+            >
+              <Share2 className="w-3.5 h-3.5 text-acento" />
+              <span>Acesso do Cliente</span>
             </button>
             <button
               type="button"

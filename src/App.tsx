@@ -12,6 +12,7 @@ import { EmpresaModal } from './components/EmpresaModal';
 import { RelatorioModal } from './components/RelatorioModal';
 import { RegimeComparativoModal } from './components/RegimeComparativoModal';
 import { DemoTourModal } from './components/DemoTourModal';
+import { AcessoClienteModal } from './components/AcessoClienteModal';
 
 export function App() {
   // Estado das Empresas com Persistência Local
@@ -50,6 +51,7 @@ export function App() {
   const [modalRelatorioAberto, setModalRelatorioAberto] = useState(false);
   const [modalRegimesAberto, setModalRegimesAberto] = useState(false);
   const [modalDemoAberto, setModalDemoAberto] = useState(false);
+  const [modalAcessoClienteAberto, setModalAcessoClienteAberto] = useState(false);
 
   // Modo Escuro / Claro
   const [modoEscuro, setModoEscuro] = useState<boolean>(() => {
@@ -260,6 +262,7 @@ export function App() {
               onEditarEmpresa={handleEditarEmpresa}
               onAbrirRelatorio={() => setModalRelatorioAberto(true)}
               onAbrirComparativoRegimes={() => setModalRegimesAberto(true)}
+              onAbrirAcessoCliente={() => setModalAcessoClienteAberto(true)}
               onAtualizarAlavancasEmpresa={handleAtualizarAlavancas}
               modoEscuro={modoEscuro}
             />
@@ -305,6 +308,14 @@ export function App() {
           parametros={parametros}
           onFechar={() => setModalRegimesAberto(false)}
           onAplicarRegime={handleAplicarRegime}
+        />
+      )}
+
+      {modalAcessoClienteAberto && empresaAtiva && (
+        <AcessoClienteModal
+          empresa={empresaAtiva}
+          parametros={parametros}
+          onFechar={() => setModalAcessoClienteAberto(false)}
         />
       )}
 
