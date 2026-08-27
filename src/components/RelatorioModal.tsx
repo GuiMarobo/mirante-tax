@@ -29,13 +29,13 @@ export const RelatorioModal: React.FC<RelatorioModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs overflow-y-auto print:p-0 print:bg-white">
-      <div className="bg-superficie border border-line w-full max-w-4xl max-h-[95vh] flex flex-col shadow-2xl print:max-h-none print:border-none print:shadow-none print:w-full">
-        {/* Header Bento do Modal (Oculto na Impressão) */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto print:p-0 print:bg-white">
+      <div className="bg-superficie border border-line rounded-xl w-full max-w-4xl max-h-[95vh] flex flex-col shadow-2xl print:max-h-none print:border-none print:shadow-none print:w-full print:rounded-none">
+        {/* Cabeçalho do Modal (Oculto na Impressão) */}
         <div className="flex items-center justify-between p-4 border-b border-line print:hidden">
           <div className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-acento" />
-            <h2 className="text-sm font-bold uppercase tracking-tight text-textoPrimario font-mono">
+            <h2 className="text-sm font-semibold text-textoPrimario">
               Relatório Executivo de Projeção de Capital de Giro
             </h2>
           </div>
@@ -44,16 +44,16 @@ export const RelatorioModal: React.FC<RelatorioModalProps> = ({
             <button
               type="button"
               onClick={handleImprimir}
-              className="px-3 py-1.5 bg-acento text-black font-bold font-mono text-xs flex items-center gap-1.5 hover:opacity-90 transition-all"
+              className="px-3 py-1.5 rounded-lg bg-acento text-black font-semibold text-xs flex items-center gap-1.5 hover:opacity-90 transition-all shadow-sm"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>IMPRIMIR / PDF</span>
+              <span>Imprimir / PDF</span>
             </button>
 
             <button
               type="button"
               onClick={onFechar}
-              className="p-1.5 text-textoSecundario hover:text-textoPrimario hover:bg-superficieElevada transition-colors border border-transparent hover:border-line"
+              className="p-1.5 rounded-lg text-textoSecundario hover:text-textoPrimario hover:bg-superficieElevada transition-colors"
             >
               <X className="w-5 h-5" />
             </button>

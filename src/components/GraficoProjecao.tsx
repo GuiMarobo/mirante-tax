@@ -91,80 +91,80 @@ export const GraficoProjecao: React.FC<GraficoProjecaoProps> = ({
   const hoverPontoAlavanca = hoverIndex !== null && pontosComAlavanca ? pontosComAlavanca[hoverIndex] : null;
 
   // Cores dinâmicas para tema
-  const strokeGrid = modoEscuro ? '#2C4254' : '#E2E8F0';
-  const textMuted = modoEscuro ? '#8FA3B3' : '#64748B';
-  const baseColor = cenarioComAlavancas ? (modoEscuro ? '#8FA3B3' : '#94A3B8') : (modoEscuro ? '#4A9188' : '#0D9488');
+  const strokeGrid = modoEscuro ? '#29334A' : '#E7E9ED';
+  const textMuted = modoEscuro ? '#8B95AB' : '#667085';
+  const baseColor = cenarioComAlavancas ? (modoEscuro ? '#8B95AB' : '#94A3B8') : (modoEscuro ? '#34B27A' : '#16A34A');
 
   return (
-    <div className="w-full">
+    <div className="w-full bg-superficie rounded-xl border border-line p-4">
       {/* Controles de Topo do Gráfico */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-2 border-b border-line">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-3 h-3 rounded-full bg-emerald-500"></span>
-            <span className="text-xs font-mono uppercase tracking-wider font-semibold">
-              {cenarioComAlavancas ? 'Curva Base (Ref.)' : 'Projeção Base (8,8% CBS)'}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-line">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <span className="text-xs font-medium text-textoSecundario">
+              {cenarioComAlavancas ? 'Curva base (ref.)' : 'Projeção base (8,8% CBS)'}
             </span>
           </div>
 
           {cenarioComAlavancas && (
-            <div className="flex items-center gap-2">
-              <span className="inline-block w-3 h-3 rounded-full bg-amber-400 animate-pulse"></span>
-              <span className="text-xs font-mono uppercase tracking-wider font-bold text-amber-500">
-                Curva Ajustada c/ Alavancas
+            <div className="flex items-center gap-1.5">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+              <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+                Curva ajustada c/ alavancas
               </span>
             </div>
           )}
 
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-4 h-0.5 bg-red-500 border-b border-dashed border-red-500"></span>
-            <span className="text-xs font-mono uppercase tracking-wider text-red-400">
-              Piso Op. (R$ {piso.toLocaleString('pt-BR')})
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-3 h-0.5 bg-red-500"></span>
+            <span className="text-xs text-textoSecundario">
+              Piso op. (R$ {piso.toLocaleString('pt-BR')})
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-3 h-3 bg-emerald-500/20 rounded"></span>
-            <span className="text-xs font-mono uppercase tracking-wider text-slate-400">
-              Faixa de Cenários (8,4% a 9,21%)
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-2.5 h-2.5 bg-emerald-500/20 rounded-sm"></span>
+            <span className="text-xs text-textoSecundario">
+              Faixa de cenários (8,4% a 9,21%)
             </span>
           </div>
         </div>
 
         {/* Seletor de Horizonte */}
-        <div className="flex items-center gap-1 bg-superficieElevada/80 p-1 rounded-lg border border-line">
+        <div className="flex items-center gap-1 bg-superficieElevada p-1 rounded-lg">
           <button
             type="button"
             onClick={() => onMudarHorizonte(24)}
-            className={`px-3 py-1 text-xs font-mono font-medium rounded transition-colors ${
-              horizonteMeses === 24 ? 'bg-acento text-black font-bold shadow-xs' : 'text-textoSecundario hover:text-textoPrimario'
+            className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+              horizonteMeses === 24 ? 'bg-superficie text-textoPrimario shadow-sm' : 'text-textoSecundario hover:text-textoPrimario'
             }`}
           >
-            24 Meses
+            24 meses
           </button>
           <button
             type="button"
             onClick={() => onMudarHorizonte(36)}
-            className={`px-3 py-1 text-xs font-mono font-medium rounded transition-colors ${
-              horizonteMeses === 36 ? 'bg-acento text-black font-bold shadow-xs' : 'text-textoSecundario hover:text-textoPrimario'
+            className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+              horizonteMeses === 36 ? 'bg-superficie text-textoPrimario shadow-sm' : 'text-textoSecundario hover:text-textoPrimario'
             }`}
           >
-            36 Meses
+            36 meses
           </button>
           <button
             type="button"
             onClick={() => onMudarHorizonte(84)}
-            className={`px-3 py-1 text-xs font-mono font-medium rounded transition-colors ${
-              horizonteMeses === 84 ? 'bg-acento text-black font-bold shadow-xs' : 'text-textoSecundario hover:text-textoPrimario'
+            className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+              horizonteMeses === 84 ? 'bg-superficie text-textoPrimario shadow-sm' : 'text-textoSecundario hover:text-textoPrimario'
             }`}
           >
-            Até 2033 (84M)
+            Até 2033 (84m)
           </button>
         </div>
       </div>
 
       {/* Container SVG Responsivo */}
-      <div className="relative w-full overflow-hidden bg-superficie rounded-xl border border-line p-2">
+      <div className="relative w-full overflow-hidden">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           className="w-full h-auto select-none"

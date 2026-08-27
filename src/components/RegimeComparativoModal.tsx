@@ -38,19 +38,19 @@ export const RegimeComparativoModal: React.FC<RegimeComparativoModalProps> = ({
     : 'Simples Nacional Unificado (Menor impacto inicial)';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs overflow-y-auto">
-      <div className="bg-superficie border border-line w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl">
-        {/* Header Bento do Modal */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
+      <div className="bg-superficie border border-line rounded-xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl">
+        {/* Cabeçalho do Modal */}
         <div className="flex items-center justify-between p-4 border-b border-line">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-acento/10 text-acento">
+            <div className="p-2 rounded-lg bg-acento/10 text-acento">
               <ArrowRightLeft className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm font-bold uppercase tracking-tight text-textoPrimario font-mono">
+              <h2 className="text-sm font-semibold text-textoPrimario">
                 Comparativo de Regimes na Transição · {empresa.nome}
               </h2>
-              <p className="text-[11px] text-textoSecundario font-mono">
+              <p className="text-[11px] text-textoSecundario">
                 Simulação: Simples Unificado (DAS) vs. Opção CBS/IBS Regular (Não-Cumulativo)
               </p>
             </div>
@@ -59,16 +59,16 @@ export const RegimeComparativoModal: React.FC<RegimeComparativoModalProps> = ({
           <button
             type="button"
             onClick={onFechar}
-            className="p-1.5 text-textoSecundario hover:text-textoPrimario hover:bg-superficieElevada transition-colors border border-transparent hover:border-line"
+            className="p-1.5 rounded-lg text-textoSecundario hover:text-textoPrimario hover:bg-superficieElevada transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Corpo Comparativo */}
-        <div className="p-5 overflow-y-auto space-y-4 flex-1 text-xs font-mono">
+        <div className="p-5 overflow-y-auto space-y-4 flex-1 text-xs">
           {/* Veredito Comparativo */}
-          <div className="p-3 bg-acento/10 border border-acento/30 flex items-start gap-3">
+          <div className="p-3 rounded-lg bg-acento/10 border border-acento/30 flex items-start gap-3">
             <Zap className="w-5 h-5 text-acento shrink-0 mt-0.5" />
             <div>
               <h4 className="font-bold text-textoPrimario text-xs uppercase tracking-tight">
@@ -85,9 +85,9 @@ export const RegimeComparativoModal: React.FC<RegimeComparativoModalProps> = ({
           </div>
 
           {/* Cards Bento Lado a Lado */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-1 bg-line p-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* Coluna 1: Simples Unificado */}
-            <div className={`p-4 ${empresa.regime === 'simples_unificado' ? 'bg-superficieElevada border-2 border-acento' : 'bg-superficie'}`}>
+            <div className={`p-4 rounded-xl border ${empresa.regime === 'simples_unificado' ? 'bg-superficieElevada border-acento' : 'bg-superficie border-line'}`}>
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-bold text-xs uppercase tracking-tight text-textoPrimario">
                   Simples Nacional Unificado
@@ -137,7 +137,7 @@ export const RegimeComparativoModal: React.FC<RegimeComparativoModalProps> = ({
                 <button
                   type="button"
                   onClick={() => onAplicarRegime('simples_unificado')}
-                  className={`w-full py-1.5 text-xs font-bold transition-colors ${
+                  className={`w-full py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                     empresa.regime === 'simples_unificado'
                       ? 'bg-line text-textoSecundario cursor-default'
                       : 'bg-acento text-black hover:opacity-90'
@@ -149,7 +149,7 @@ export const RegimeComparativoModal: React.FC<RegimeComparativoModalProps> = ({
             </div>
 
             {/* Coluna 2: Opção pelo Regime Regular CBS/IBS */}
-            <div className={`p-4 ${empresa.regime === 'simples_regular' ? 'bg-superficieElevada border-2 border-acento' : 'bg-superficie'}`}>
+            <div className={`p-4 rounded-xl border ${empresa.regime === 'simples_regular' ? 'bg-superficieElevada border-acento' : 'bg-superficie border-line'}`}>
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-bold text-xs uppercase tracking-tight text-textoPrimario">
                   Opção CBS/IBS Regime Regular
@@ -199,7 +199,7 @@ export const RegimeComparativoModal: React.FC<RegimeComparativoModalProps> = ({
                 <button
                   type="button"
                   onClick={() => onAplicarRegime('simples_regular')}
-                  className={`w-full py-1.5 text-xs font-bold transition-colors ${
+                  className={`w-full py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                     empresa.regime === 'simples_regular'
                       ? 'bg-line text-textoSecundario cursor-default'
                       : 'bg-acento text-black hover:opacity-90'
