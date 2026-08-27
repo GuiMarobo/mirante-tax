@@ -218,7 +218,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-fundo text-textoPrimario flex font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-fundo text-textoPrimario flex flex-col md:flex-row font-sans transition-colors duration-200">
       {/* Barra Lateral de Navegação */}
       <div className="print:hidden">
         <Sidebar
@@ -237,7 +237,7 @@ export function App() {
       </div>
 
       {/* Conteúdo Principal */}
-      <main className="flex-1 min-w-0 px-6 sm:px-8 py-6">
+      <main className="flex-1 min-w-0 px-4 sm:px-6 md:px-8 py-5 md:py-6">
         <div className="max-w-6xl mx-auto">
           {abaAtiva === 'carteira' && (
             <CarteiraView

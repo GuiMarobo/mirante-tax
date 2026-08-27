@@ -205,7 +205,7 @@ export const RelatorioModal: React.FC<RelatorioModalProps> = ({
           </div>
 
           {/* Assinaturas */}
-          <div className="pt-6 mt-4 border-t border-line print:border-gray-400 grid grid-cols-2 gap-8 text-center text-xs">
+          <div className="pt-6 mt-4 border-t border-line print:border-gray-400 grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 text-center text-xs">
             <div>
               <div className="border-t border-line/80 print:border-gray-500 pt-1.5 w-48 mx-auto">
                 <div className="font-bold print:text-black">Responsável Técnico</div>

@@ -1,4 +1,4 @@
-import React, { useState, useId } from 'react';
+import React, { useState, useId, useRef } from 'react';
 import { ProjecaoResultado } from '../types';
 
 interface GraficoProjecaoProps {
@@ -16,6 +16,8 @@ export const GraficoProjecao: React.FC<GraficoProjecaoProps> = ({
 }) => {
   const chartUid = useId();
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
 
   const { cenarioBase, cenarioConservador, cenarioPessimista, cenarioComAlavancas, memoriaCalculo } = projecao;
   const piso = memoriaCalculo.pisoOperacional;
@@ -53,6 +55,17 @@ export const GraficoProjecao: React.FC<GraficoProjecaoProps> = ({
 
   const scaleX = (index: number) => padLeft + (index / (pontos.length - 1)) * chartW;
   const scaleY = (val: number) => padTop + chartH - ((val - minY) / (maxY - minY)) * chartH;
+
+  // Suporte a toque: mapeia a posição do dedo para o mês mais próximo (mobile não tem hover)
+  const handleTouch = (e: React.TouchEvent<SVGSVGElement>) => {
+    const touch = e.touches[0];
+    if (!touch || !svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const relX = touch.clientX - rect.left;
+    const svgX = (relX / rect.width) * width;
+    const idx = Math.round(((svgX - padLeft) / chartW) * (pontos.length - 1));
+    setHoverIndex(Math.max(0, Math.min(pontos.length - 1, idx)));
+  };
 
   // Gerar caminhos de linhas e áreas
   const pathConservador = cenarioConservador.pontos
@@ -164,11 +177,14 @@ export const GraficoProjecao: React.FC<GraficoProjecaoProps> = ({
       </div>
 
       {/* Container SVG Responsivo */}
-      <div className="relative w-full overflow-hidden">
+      <div className="relative w-full overflow-hidden" ref={containerRef}>
         <svg
+          ref={svgRef}
           viewBox={`0 0 ${width} ${height}`}
-          className="w-full h-auto select-none"
+          className="w-full h-auto select-none touch-none"
           onMouseLeave={() => setHoverIndex(null)}
+          onTouchStart={handleTouch}
+          onTouchMove={handleTouch}
         >
           <defs>
             {/* Gradiente da Faixa de Cenários */}
@@ -393,11 +409,21 @@ export const GraficoProjecao: React.FC<GraficoProjecaoProps> = ({
         </svg>
 
         {/* Tooltip Overlay Dinâmico */}
-        {hoverIndex !== null && hoverPonto && (
+        {hoverIndex !== null && hoverPonto && (() => {
+          // Posição calculada a partir da largura real renderizada do SVG (não do viewBox),
+          // para não desalinhar em telas estreitas onde o SVG é escalado para baixo.
+          const containerWidth = containerRef.current?.clientWidth || width;
+          const scaleFactor = containerWidth / width;
+          const tooltipWidth = 190;
+          const leftPx = Math.min(
+            Math.max(scaleX(hoverIndex) * scaleFactor - 90 * scaleFactor, 8),
+            containerWidth - tooltipWidth - 8
+          );
+          return (
           <div
-            className="absolute top-4 pointer-events-none bg-superficieElevada border border-line p-3 rounded-lg shadow-xl text-xs font-mono z-30 transition-all"
+            className="absolute top-4 pointer-events-none bg-superficieElevada border border-line p-3 rounded-lg shadow-xl text-xs font-mono z-30 transition-all w-[190px]"
             style={{
-              left: `${Math.min(Math.max(scaleX(hoverIndex) - 90, 80), width - 220)}px`,
+              left: `${leftPx}px`,
             }}
           >
             <div className="font-bold text-textoPrimario border-b border-line pb-1 mb-1.5 flex items-center justify-between">
@@ -436,7 +462,8 @@ export const GraficoProjecao: React.FC<GraficoProjecaoProps> = ({
               )}
             </div>
           </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );

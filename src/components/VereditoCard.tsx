@@ -48,20 +48,20 @@ export const VereditoCard: React.FC<VereditoCardProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-4 text-xs">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
           <div>
             <span className="text-textoSecundario block text-[10px]">1ª Ruptura</span>
             <strong className={mesCriticoPonto ? 'text-alerta text-sm' : 'text-confirmacao text-sm'}>
               {mesCriticoPonto ? mesCriticoPonto.rotulo : 'Nenhuma'}
             </strong>
           </div>
-          <div className="border-l border-line pl-4">
+          <div className="sm:border-l sm:border-line sm:pl-4">
             <span className="text-textoSecundario block text-[10px]">Menor Saldo</span>
             <strong className={`text-sm ${cenarioBase.menorSaldo < 0 ? 'text-alerta' : (cenarioBase.menorSaldo < memoriaCalculo.pisoOperacional ? 'text-alerta' : 'text-confirmacao')}`}>
               R$ {cenarioBase.menorSaldo.toLocaleString('pt-BR')}
             </strong>
           </div>
-          <div className="border-l border-line pl-4">
+          <div className="sm:border-l sm:border-line sm:pl-4">
             <span className="text-textoSecundario block text-[10px]">Meses no Piso</span>
             <strong className="text-sm text-textoPrimario">
               {cenarioBase.mesesAbaixoPiso} / 24

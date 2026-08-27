@@ -11,6 +11,8 @@ import {
   Search,
   Compass,
   ChevronDown,
+  Menu,
+  X,
 } from 'lucide-react';
 
 interface EmpresaPrioritaria {
@@ -48,6 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const [buscaAberta, setBuscaAberta] = useState(false);
   const [busca, setBusca] = useState('');
+  const [mobileAberto, setMobileAberto] = useState(false);
   const buscaRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(buscaRef, () => setBuscaAberta(false));
@@ -55,6 +58,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const resultados = busca.trim()
     ? empresas.filter(e => e.nome.toLowerCase().includes(busca.toLowerCase())).slice(0, 6)
     : [];
+
+  const irParaAba = (aba: 'carteira' | 'parametros' | 'metodologia') => {
+    onMudarAba(aba);
+    setMobileAberto(false);
+  };
+
+  const selecionarEmpresa = (empresa: Empresa) => {
+    onSelecionarEmpresa(empresa);
+    setMobileAberto(false);
+  };
 
   const itemNav = (
     aba: 'carteira' | 'parametros' | 'metodologia',
@@ -66,7 +79,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return (
       <button
         type="button"
-        onClick={() => onMudarAba(aba)}
+        onClick={() => irParaAba(aba)}
         className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
           ativo
             ? 'bg-acento/12 text-acento'
@@ -80,19 +93,57 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <aside className="w-64 shrink-0 h-screen sticky top-0 flex flex-col bg-superficie border-r border-line">
+    <>
+      {/* Barra Superior Mobile */}
+      <div className="md:hidden sticky top-0 z-30 flex items-center gap-3 px-4 h-14 bg-superficie border-b border-line">
+        <button
+          type="button"
+          onClick={() => setMobileAberto(true)}
+          aria-label="Abrir menu"
+          className="p-2 -ml-2 rounded-lg text-textoSecundario hover:text-textoPrimario hover:bg-superficieElevada transition-colors"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+        <div className="w-6 h-6 rounded-md bg-acento flex items-center justify-center font-bold text-[10px] text-black shrink-0">
+          MT
+        </div>
+        <span className="text-sm font-semibold text-textoPrimario truncate">Mirante Tax</span>
+      </div>
+
+      {/* Fundo escurecido do menu mobile */}
+      {mobileAberto && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setMobileAberto(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={`fixed md:sticky top-0 left-0 z-50 md:z-auto h-screen w-64 max-w-[85vw] shrink-0 flex flex-col bg-superficie border-r border-line transform transition-transform duration-200 ease-out ${
+          mobileAberto ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0`}
+      >
       {/* Marca */}
       <div className="flex items-center gap-2.5 px-4 h-16 border-b border-line shrink-0">
         <div className="w-7 h-7 rounded-lg bg-acento flex items-center justify-center font-bold text-[11px] text-black">
           MT
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1 text-sm font-semibold text-textoPrimario truncate">
             <span>Mirante Tax</span>
             <ChevronDown className="w-3.5 h-3.5 text-textoSecundario shrink-0" />
           </div>
           <div className="text-[11px] text-textoSecundario truncate">Ledger Labs</div>
         </div>
+        <button
+          type="button"
+          onClick={() => setMobileAberto(false)}
+          aria-label="Fechar menu"
+          className="md:hidden p-1.5 rounded-lg text-textoSecundario hover:text-textoPrimario hover:bg-superficieElevada transition-colors shrink-0"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
 
       {/* Busca rápida */}
@@ -116,7 +167,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 key={e.id}
                 type="button"
                 onClick={() => {
-                  onSelecionarEmpresa(e);
+                  selecionarEmpresa(e);
                   setBusca('');
                   setBuscaAberta(false);
                 }}
@@ -147,7 +198,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 key={empresa.id}
                 type="button"
-                onClick={() => onSelecionarEmpresa(empresa)}
+                onClick={() => selecionarEmpresa(empresa)}
                 className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs text-textoSecundario hover:bg-superficieElevada hover:text-textoPrimario transition-colors"
               >
                 <span
@@ -189,6 +240,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 };
