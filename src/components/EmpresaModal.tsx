@@ -79,19 +79,19 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs overflow-y-auto">
-      <div className="bg-superficie border border-line w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl my-auto">
-        {/* Header Bento do Modal */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
+      <div className="bg-superficie border border-line rounded-xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl my-auto">
+        {/* Cabeçalho do Modal */}
         <div className="flex items-center justify-between p-4 border-b border-line">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-acento/10 text-acento">
+            <div className="p-2 rounded-lg bg-acento/10 text-acento">
               <Building className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm font-bold uppercase tracking-tight text-textoPrimario font-mono">
+              <h2 className="text-sm font-semibold text-textoPrimario">
                 {empresa ? 'Editar Parâmetros da Empresa' : 'Cadastrar Nova Empresa'}
               </h2>
-              <p className="text-[11px] text-textoSecundario font-mono">
+              <p className="text-[11px] text-textoSecundario">
                 Parâmetros de entrada para o motor de projeção de capital de giro
               </p>
             </div>
@@ -100,17 +100,17 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
           <button
             type="button"
             onClick={onFechar}
-            className="p-1.5 text-textoSecundario hover:text-textoPrimario hover:bg-superficieElevada transition-colors border border-transparent hover:border-line"
+            className="p-1.5 rounded-lg text-textoSecundario hover:text-textoPrimario hover:bg-superficieElevada transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Formulário com Scroll Interno */}
-        <form onSubmit={handleSubmit} className="p-5 overflow-y-auto space-y-4 flex-1 text-xs font-mono">
+        <form onSubmit={handleSubmit} className="p-5 overflow-y-auto space-y-4 flex-1 text-xs">
           {/* Seção 1: Identificação */}
           <div className="space-y-2">
-            <h3 className="font-mono uppercase font-bold text-acento text-[11px] tracking-wider">
+            <h3 className="font-semibold text-acento text-[11px] uppercase tracking-wide">
               01. Identificação & Regime
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
@@ -122,7 +122,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   placeholder="Ex: Comercial Silva Ltda"
-                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line text-textoPrimario focus:outline-none focus:border-acento"
+                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line rounded-lg text-textoPrimario focus:outline-none focus:border-acento"
                 />
               </div>
 
@@ -133,7 +133,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
                   value={cnae}
                   onChange={(e) => setCnae(e.target.value)}
                   placeholder="Ex: 46.39-7-01"
-                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line text-textoPrimario focus:outline-none focus:border-acento"
+                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line rounded-lg text-textoPrimario focus:outline-none focus:border-acento"
                 />
               </div>
 
@@ -144,7 +144,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
                   value={ramo}
                   onChange={(e) => setRamo(e.target.value)}
                   placeholder="Ex: Varejo de Alimentos"
-                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line text-textoPrimario focus:outline-none focus:border-acento"
+                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line rounded-lg text-textoPrimario focus:outline-none focus:border-acento"
                 />
               </div>
 
@@ -153,7 +153,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
                 <select
                   value={regime}
                   onChange={(e) => setRegime(e.target.value as RegimeTributario)}
-                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line text-textoPrimario focus:outline-none focus:border-acento"
+                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line rounded-lg text-textoPrimario focus:outline-none focus:border-acento"
                 >
                   <option value="simples_unificado">Simples Nacional (Unificado no DAS)</option>
                   <option value="simples_regular">Simples Nacional (Opção CBS/IBS Regular)</option>
@@ -167,7 +167,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
                 <select
                   value={perfilSazonal}
                   onChange={(e) => setPerfilSazonal(e.target.value as PerfilSazonal)}
-                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line text-textoPrimario focus:outline-none focus:border-acento"
+                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line rounded-lg text-textoPrimario focus:outline-none focus:border-acento"
                 >
                   <option value="varejo">Varejo (Concentração fim de ano)</option>
                   <option value="estavel">Estável (Linear anual)</option>
@@ -184,7 +184,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
 
           {/* Seção 2: Operação e Finanças */}
           <div className="space-y-2">
-            <h3 className="font-mono uppercase font-bold text-acento text-[11px] tracking-wider">
+            <h3 className="font-semibold text-acento text-[11px] uppercase tracking-wide">
               02. Parâmetros Operacionais e Caixa
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -196,7 +196,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
                   step="1000"
                   value={faturamentoMensal}
                   onChange={(e) => setFaturamentoMensal(Number(e.target.value))}
-                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line text-textoPrimario focus:outline-none focus:border-acento"
+                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line rounded-lg text-textoPrimario focus:outline-none focus:border-acento"
                 />
               </div>
 
@@ -208,7 +208,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
                   step="1000"
                   value={comprasMensais}
                   onChange={(e) => setComprasMensais(Number(e.target.value))}
-                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line text-textoPrimario focus:outline-none focus:border-acento"
+                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line rounded-lg text-textoPrimario focus:outline-none focus:border-acento"
                 />
               </div>
 
@@ -220,7 +220,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
                   step="1000"
                   value={custoOperacional}
                   onChange={(e) => setCustoOperacional(Number(e.target.value))}
-                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line text-textoPrimario focus:outline-none focus:border-acento"
+                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line rounded-lg text-textoPrimario focus:outline-none focus:border-acento"
                 />
               </div>
 
@@ -231,7 +231,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
                   step="1000"
                   value={caixaAtual}
                   onChange={(e) => setCaixaAtual(Number(e.target.value))}
-                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line text-textoPrimario focus:outline-none focus:border-acento"
+                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line rounded-lg text-textoPrimario focus:outline-none focus:border-acento"
                 />
               </div>
 
@@ -242,7 +242,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
                   min="0"
                   value={prazoRecebimento}
                   onChange={(e) => setPrazoRecebimento(Number(e.target.value))}
-                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line text-textoPrimario focus:outline-none focus:border-acento"
+                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line rounded-lg text-textoPrimario focus:outline-none focus:border-acento"
                 />
               </div>
 
@@ -253,21 +253,21 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
                   min="0"
                   value={prazoPagamento}
                   onChange={(e) => setPrazoPagamento(Number(e.target.value))}
-                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line text-textoPrimario focus:outline-none focus:border-acento"
+                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line rounded-lg text-textoPrimario focus:outline-none focus:border-acento"
                 />
               </div>
             </div>
           </div>
 
           {/* Seção 3: Mix de Recebimento */}
-          <div className="bg-superficieElevada/40 p-3 border border-line space-y-2">
+          <div className="bg-superficieElevada/40 rounded-lg p-3 border border-line space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="font-mono uppercase font-bold text-acento text-[11px] tracking-wider">
+              <h3 className="font-semibold text-acento text-[11px] uppercase tracking-wide">
                 03. Mix de Liquidação (Exposição ao Split)
               </h3>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-textoSecundario">SOMA:</span>
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 ${
+                <span className="text-[10px] text-textoSecundario">Soma:</span>
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
                   mixValido ? 'bg-confirmacao/20 text-confirmacao' : 'bg-alerta/20 text-alerta'
                 }`}>
                   {somaMix}% {mixValido ? '✓' : '≠ 100%'}
@@ -276,7 +276,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
             </div>
 
             {!mixValido && (
-              <div className="p-2 bg-alerta/10 border border-alerta/30 text-alerta text-[11px] flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-alerta/10 border border-alerta/30 text-alerta text-[11px] flex items-center gap-2">
                 <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                 <span>O mix de recebimento deve somar exatamente 100%.</span>
               </div>
@@ -291,7 +291,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
                   max="100"
                   value={mixBoleto}
                   onChange={(e) => setMixBoleto(Number(e.target.value))}
-                  className="w-full px-2 py-1 bg-superficie border border-line text-textoPrimario focus:outline-none focus:border-acento"
+                  className="w-full px-2 py-1 bg-superficie border border-line rounded-lg text-textoPrimario focus:outline-none focus:border-acento"
                 />
               </div>
 
@@ -303,7 +303,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
                   max="100"
                   value={mixPix}
                   onChange={(e) => setMixPix(Number(e.target.value))}
-                  className="w-full px-2 py-1 bg-superficie border border-line text-textoPrimario focus:outline-none focus:border-acento"
+                  className="w-full px-2 py-1 bg-superficie border border-line rounded-lg text-textoPrimario focus:outline-none focus:border-acento"
                 />
               </div>
 
@@ -315,7 +315,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
                   max="100"
                   value={mixCartao}
                   onChange={(e) => setMixCartao(Number(e.target.value))}
-                  className="w-full px-2 py-1 bg-superficie border border-line text-textoPrimario focus:outline-none focus:border-acento"
+                  className="w-full px-2 py-1 bg-superficie border border-line rounded-lg text-textoPrimario focus:outline-none focus:border-acento"
                 />
               </div>
 
@@ -327,7 +327,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
                   max="100"
                   value={mixFaturado}
                   onChange={(e) => setMixFaturado(Number(e.target.value))}
-                  className="w-full px-2 py-1 bg-superficie border border-line text-textoPrimario focus:outline-none focus:border-acento"
+                  className="w-full px-2 py-1 bg-superficie border border-line rounded-lg text-textoPrimario focus:outline-none focus:border-acento"
                 />
               </div>
             </div>
@@ -339,7 +339,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
 
           {/* Seção 4: Tributação & Risco */}
           <div className="space-y-2">
-            <h3 className="font-mono uppercase font-bold text-acento text-[11px] tracking-wider">
+            <h3 className="font-semibold text-acento text-[11px] uppercase tracking-wide">
               04. Alíquotas e Fornecedores
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -351,7 +351,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
                   min="0"
                   value={cargaAtual}
                   onChange={(e) => setCargaAtual(Number(e.target.value))}
-                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line text-textoPrimario focus:outline-none focus:border-acento"
+                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line rounded-lg text-textoPrimario focus:outline-none focus:border-acento"
                 />
               </div>
 
@@ -360,7 +360,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
                 <select
                   value={reducaoAliquota}
                   onChange={(e) => setReducaoAliquota(e.target.value as ReducaoAliquota)}
-                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line text-textoPrimario focus:outline-none focus:border-acento"
+                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line rounded-lg text-textoPrimario focus:outline-none focus:border-acento"
                 >
                   <option value="cheia">Alíquota Cheia (1.0)</option>
                   <option value="red30">Redução de 30% (0.7)</option>
@@ -378,7 +378,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
                   max="100"
                   value={fornecedoresRisco}
                   onChange={(e) => setFornecedoresRisco(Number(e.target.value))}
-                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line text-textoPrimario focus:outline-none focus:border-acento"
+                  className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line rounded-lg text-textoPrimario focus:outline-none focus:border-acento"
                 />
               </div>
 
@@ -391,7 +391,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
                     min="0"
                     value={aliquotaCustom}
                     onChange={(e) => setAliquotaCustom(Number(e.target.value))}
-                    className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line text-textoPrimario focus:outline-none focus:border-acento"
+                    className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line rounded-lg text-textoPrimario focus:outline-none focus:border-acento"
                   />
                 </div>
               )}
@@ -408,7 +408,7 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
               value={notas}
               onChange={(e) => setNotas(e.target.value)}
               placeholder="Ex: Validar prazo de antecipação e risco fiscal de fornecedores..."
-              className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line text-textoPrimario focus:outline-none focus:border-acento text-xs"
+              className="w-full px-2.5 py-1.5 bg-superficieElevada border border-line rounded-lg text-textoPrimario focus:outline-none focus:border-acento text-xs"
             />
           </div>
 
@@ -417,21 +417,21 @@ export const EmpresaModal: React.FC<EmpresaModalProps> = ({
             <button
               type="button"
               onClick={onFechar}
-              className="px-3 py-1.5 bg-superficieElevada border border-line text-textoSecundario hover:text-textoPrimario text-xs transition-colors"
+              className="px-3 py-1.5 bg-superficieElevada border border-line rounded-lg text-textoSecundario hover:text-textoPrimario text-xs transition-colors"
             >
-              CANCELAR
+              Cancelar
             </button>
             <button
               type="submit"
               disabled={!mixValido}
-              className={`px-4 py-1.5 font-bold text-xs flex items-center gap-1.5 transition-all ${
+              className={`px-4 py-1.5 rounded-lg font-semibold text-xs flex items-center gap-1.5 transition-all shadow-sm ${
                 mixValido
                   ? 'bg-acento text-black hover:opacity-90'
                   : 'bg-line text-textoSecundario cursor-not-allowed'
               }`}
             >
               <Save className="w-3.5 h-3.5" />
-              <span>SALVAR EMPRESA</span>
+              <span>Salvar empresa</span>
             </button>
           </div>
         </form>

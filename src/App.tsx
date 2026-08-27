@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Empresa, ParametrosGlobais, AlavancasAtivas } from './types';
 import { PERFIS_EMPRESAS_PADRAO, PARAMETROS_GLOBAIS_PADRAO } from './data/defaultData';
 import { exportarCarteiraCSV, parseCarteiraCSV } from './utils/csv';
-import { Navbar } from './components/Navbar';
+import { calcularProjecaoCompleta } from './motor/motorCalculo';
+import { Sidebar } from './components/Sidebar';
 import { CarteiraView } from './components/CarteiraView';
 import { ProjecaoView } from './components/ProjecaoView';
 import { ParametrosGlobaisView } from './components/ParametrosGlobaisView';
@@ -53,7 +54,7 @@ export function App() {
   // Modo Escuro / Claro
   const [modoEscuro, setModoEscuro] = useState<boolean>(() => {
     const saved = localStorage.getItem('mirante_tax_tema');
-    return saved !== null ? saved === 'escuro' : true;
+    return saved !== null ? saved === 'escuro' : false;
   });
 
   // Sincronizar tema no HTML
@@ -81,6 +82,24 @@ export function App() {
   }, [parametros]);
 
   const empresaAtiva = empresas.find(e => e.id === empresaSelecionadaId) || null;
+
+  // Ranking das empresas mais urgentes para acesso rápido na barra lateral
+  const empresasPrioritarias = useMemo(() => {
+    return empresas
+      .map(empresa => {
+        const projecao = calcularProjecaoCompleta(
+          empresa,
+          parametros,
+          empresa.alavancasAtivas || { reajustePreco: false, prorrogacaoFornecedor: false, corteCusto: false },
+          24
+        );
+        return { empresa, nivel: projecao.risco.nivel, ordem: projecao.risco.ordem };
+      })
+      .filter(item => item.ordem >= 3)
+      .sort((a, b) => b.ordem - a.ordem)
+      .slice(0, 4)
+      .map(({ empresa, nivel }) => ({ empresa, nivel }));
+  }, [empresas, parametros]);
 
   // Handlers de Seleção e Navegação
   const handleSelecionarEmpresa = (empresa: Empresa | null) => {
@@ -154,8 +173,8 @@ export function App() {
   };
 
   // Handlers de CSV
-  const handleExportarCSV = () => {
-    exportarCarteiraCSV(empresas);
+  const handleExportarCSV = (subconjunto?: Empresa[]) => {
+    exportarCarteiraCSV(subconjunto || empresas);
   };
 
   const handleImportarCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -199,74 +218,66 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-fundo text-textoPrimario flex flex-col font-sans transition-colors duration-200">
-      {/* Barra de Navegação Superior */}
-      <Navbar
-        abaAtiva={abaAtiva}
-        onMudarAba={(aba) => {
-          setAbaAtiva(aba);
-          if (aba === 'carteira') setEmpresaSelecionadaId(null);
-        }}
-        empresaAtiva={empresaAtiva}
-        onSelecionarEmpresa={handleSelecionarEmpresa}
-        empresas={empresas}
-        modoEscuro={modoEscuro}
-        onToggleModoEscuro={() => setModoEscuro(prev => !prev)}
-        onAbrirDemo={() => setModalDemoAberto(true)}
-      />
+    <div className="min-h-screen bg-fundo text-textoPrimario flex font-sans transition-colors duration-200">
+      {/* Barra Lateral de Navegação */}
+      <div className="print:hidden">
+        <Sidebar
+          abaAtiva={abaAtiva}
+          onMudarAba={(aba) => {
+            setAbaAtiva(aba);
+            if (aba === 'carteira') setEmpresaSelecionadaId(null);
+          }}
+          empresas={empresas}
+          empresasPrioritarias={empresasPrioritarias}
+          onSelecionarEmpresa={handleSelecionarEmpresa}
+          modoEscuro={modoEscuro}
+          onToggleModoEscuro={() => setModoEscuro(prev => !prev)}
+          onAbrirDemo={() => setModalDemoAberto(true)}
+        />
+      </div>
 
       {/* Conteúdo Principal */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {abaAtiva === 'carteira' && (
-          <CarteiraView
-            empresas={empresas}
-            parametros={parametros}
-            onSelecionarEmpresa={handleSelecionarEmpresa}
-            onNovaEmpresa={handleNovaEmpresa}
-            onExportarCSV={handleExportarCSV}
-            onImportarCSV={handleImportarCSV}
-            onRestaurarPerfisPadrao={handleRestaurarPadroes}
-            onIniciarDemo20s={() => setModalDemoAberto(true)}
-          />
-        )}
+      <main className="flex-1 min-w-0 px-6 sm:px-8 py-6">
+        <div className="max-w-6xl mx-auto">
+          {abaAtiva === 'carteira' && (
+            <CarteiraView
+              empresas={empresas}
+              parametros={parametros}
+              onSelecionarEmpresa={handleSelecionarEmpresa}
+              onNovaEmpresa={handleNovaEmpresa}
+              onExportarCSV={handleExportarCSV}
+              onImportarCSV={handleImportarCSV}
+              onRestaurarPerfisPadrao={handleRestaurarPadroes}
+              onIniciarDemo20s={() => setModalDemoAberto(true)}
+            />
+          )}
 
-        {abaAtiva === 'projecao' && empresaAtiva && (
-          <ProjecaoView
-            empresa={empresaAtiva}
-            parametros={parametros}
-            onVoltarCarteira={handleVoltarCarteira}
-            onEditarEmpresa={handleEditarEmpresa}
-            onAbrirRelatorio={() => setModalRelatorioAberto(true)}
-            onAbrirComparativoRegimes={() => setModalRegimesAberto(true)}
-            onAtualizarAlavancasEmpresa={handleAtualizarAlavancas}
-            modoEscuro={modoEscuro}
-          />
-        )}
+          {abaAtiva === 'projecao' && empresaAtiva && (
+            <ProjecaoView
+              empresa={empresaAtiva}
+              parametros={parametros}
+              onVoltarCarteira={handleVoltarCarteira}
+              onEditarEmpresa={handleEditarEmpresa}
+              onAbrirRelatorio={() => setModalRelatorioAberto(true)}
+              onAbrirComparativoRegimes={() => setModalRegimesAberto(true)}
+              onAtualizarAlavancasEmpresa={handleAtualizarAlavancas}
+              modoEscuro={modoEscuro}
+            />
+          )}
 
-        {abaAtiva === 'parametros' && (
-          <ParametrosGlobaisView
-            parametros={parametros}
-            onSalvarParametros={setParametros}
-            onRestaurarPadrao={() => setParametros(PARAMETROS_GLOBAIS_PADRAO)}
-          />
-        )}
+          {abaAtiva === 'parametros' && (
+            <ParametrosGlobaisView
+              parametros={parametros}
+              onSalvarParametros={setParametros}
+              onRestaurarPadrao={() => setParametros(PARAMETROS_GLOBAIS_PADRAO)}
+            />
+          )}
 
-        {abaAtiva === 'metodologia' && (
-          <MetodologiaView />
-        )}
-      </main>
-
-      {/* Rodapé Institucional */}
-      <footer className="border-t border-line bg-superficie/50 py-4 mt-8 print:hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-textoSecundario">
-          <div>
-            <strong>Mirante Tax</strong> · Ledger Labs · Solveathon SESCAP 2026
-          </div>
-          <div>
-            Motor determinístico e auditável · LC 214/2025 · Transição 2026-2033
-          </div>
+          {abaAtiva === 'metodologia' && (
+            <MetodologiaView />
+          )}
         </div>
-      </footer>
+      </main>
 
       {/* Modais da Aplicação */}
       {modalEmpresaAberto && (

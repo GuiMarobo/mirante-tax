@@ -78,19 +78,19 @@ export const DemoTourModal: React.FC<DemoTourModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs overflow-y-auto">
-      <div className="bg-superficie border border-line w-full max-w-xl shadow-2xl">
-        {/* Header Bento do Tour */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
+      <div className="bg-superficie border border-line rounded-xl w-full max-w-xl shadow-2xl">
+        {/* Cabeçalho do Tour */}
         <div className="flex items-center justify-between p-4 border-b border-line">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 bg-acento/10 text-acento">
+            <div className="p-1.5 rounded-lg bg-acento/10 text-acento">
               <Zap className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm font-bold uppercase tracking-tight text-textoPrimario font-mono">
+              <h2 className="text-sm font-semibold text-textoPrimario">
                 Roteiro de Pitch (20 Segundos)
               </h2>
-              <p className="text-[10px] text-textoSecundario font-mono uppercase tracking-wider">
+              <p className="text-[10px] text-textoSecundario uppercase tracking-wide">
                 Solveathon SESCAP 2026 · Contexto 1 · Desafios D3 e D2
               </p>
             </div>
@@ -99,17 +99,17 @@ export const DemoTourModal: React.FC<DemoTourModalProps> = ({
           <button
             type="button"
             onClick={onFechar}
-            className="p-1.5 text-textoSecundario hover:text-textoPrimario hover:bg-superficieElevada transition-colors border border-transparent hover:border-line"
+            className="p-1.5 rounded-lg text-textoSecundario hover:text-textoPrimario hover:bg-superficieElevada transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Conteúdo do Passo */}
-        <div className="p-5 space-y-3 font-mono">
+        <div className="p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="px-2 py-0.5 bg-acento/10 text-acento border border-acento/30 text-[10px] font-bold uppercase tracking-wider">
-              PASSO {passo} DE {passos.length} ({passoAtual.tempo})
+            <span className="px-2 py-0.5 rounded-full bg-acento/10 text-acento border border-acento/30 text-[10px] font-semibold uppercase tracking-wide">
+              Passo {passo} de {passos.length} ({passoAtual.tempo})
             </span>
             <div className="flex gap-1">
               {passos.map((p) => (
@@ -124,7 +124,7 @@ export const DemoTourModal: React.FC<DemoTourModalProps> = ({
           </div>
 
           <div>
-            <h3 className="text-sm font-bold text-textoPrimario uppercase tracking-tight">
+            <h3 className="text-sm font-semibold text-textoPrimario">
               {passoAtual.titulo}
             </h3>
             <div className="text-xs font-semibold text-acento mt-0.5">
@@ -132,25 +132,25 @@ export const DemoTourModal: React.FC<DemoTourModalProps> = ({
             </div>
           </div>
 
-          <p className="text-xs text-textoSecundario leading-relaxed font-sans">
+          <p className="text-xs text-textoSecundario leading-relaxed">
             {passoAtual.conteudo}
           </p>
 
-          <div className="bg-superficieElevada/60 p-3 border border-line flex items-start gap-2 text-xs">
+          <div className="bg-superficieElevada/60 rounded-lg p-3 flex items-start gap-2 text-xs">
             <Clock className="w-4 h-4 text-acento shrink-0 mt-0.5" />
             <span className="text-textoSecundario text-[11px]">
-              <strong className="text-textoPrimario">Nota Técnica:</strong> {passoAtual.dica}
+              <strong className="text-textoPrimario">Nota técnica:</strong> {passoAtual.dica}
             </span>
           </div>
         </div>
 
-        {/* Footer com Navegação Bento */}
-        <div className="p-3 border-t border-line flex items-center justify-between font-mono">
+        {/* Footer com Navegação */}
+        <div className="p-3 border-t border-line flex items-center justify-between">
           <button
             type="button"
             onClick={voltar}
             disabled={passo === 1}
-            className={`px-3 py-1.5 text-xs uppercase flex items-center gap-1 transition-colors ${
+            className={`px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 transition-colors ${
               passo === 1 ? 'text-line cursor-not-allowed' : 'text-textoSecundario hover:text-textoPrimario hover:bg-superficieElevada'
             }`}
           >
@@ -162,7 +162,7 @@ export const DemoTourModal: React.FC<DemoTourModalProps> = ({
             <button
               type="button"
               onClick={onFechar}
-              className="px-3 py-1.5 text-xs text-textoSecundario hover:text-textoPrimario hover:bg-superficieElevada uppercase"
+              className="px-3 py-1.5 rounded-lg text-xs text-textoSecundario hover:text-textoPrimario hover:bg-superficieElevada"
             >
               Pular
             </button>
@@ -170,9 +170,9 @@ export const DemoTourModal: React.FC<DemoTourModalProps> = ({
             <button
               type="button"
               onClick={avancar}
-              className="px-4 py-1.5 bg-acento text-black font-bold text-xs flex items-center gap-1.5 hover:opacity-90 transition-all"
+              className="px-4 py-1.5 rounded-lg bg-acento text-black font-semibold text-xs flex items-center gap-1.5 hover:opacity-90 transition-all shadow-sm"
             >
-              <span>{passo === passos.length ? 'VER COMERCIAL SILVA' : 'PRÓXIMO'}</span>
+              <span>{passo === passos.length ? 'Ver Comercial Silva' : 'Próximo'}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>

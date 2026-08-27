@@ -1,18 +1,22 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { Empresa, ParametrosGlobais, NivelRisco } from '../types';
 import { calcularProjecaoCompleta } from '../motor/motorCalculo';
+import { MiniSparkline, MiniBarras } from './MiniSparkline';
+import { useClickOutside } from '../hooks/useClickOutside';
 import {
   Building2,
-  AlertOctagon,
   AlertTriangle,
-  ShieldCheck,
   Search,
   Plus,
-  Download,
+  ChevronDown,
+  ChevronRight,
+  Columns3,
   Upload,
-  ArrowRight,
-  Clock,
+  Download,
+  RotateCcw,
   Zap,
+  Clock,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface CarteiraViewProps {
@@ -20,10 +24,31 @@ interface CarteiraViewProps {
   parametros: ParametrosGlobais;
   onSelecionarEmpresa: (empresa: Empresa) => void;
   onNovaEmpresa: () => void;
-  onExportarCSV: () => void;
+  onExportarCSV: (subconjunto?: Empresa[]) => void;
   onImportarCSV: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRestaurarPerfisPadrao: () => void;
   onIniciarDemo20s: () => void;
+}
+
+const CORES_RISCO: Record<NivelRisco, { texto: string; fundo: string; dot: string }> = {
+  'Crítico': { texto: 'text-red-700 dark:text-red-400', fundo: 'bg-red-500/10', dot: 'bg-red-600' },
+  'Alto': { texto: 'text-amber-700 dark:text-amber-400', fundo: 'bg-amber-500/10', dot: 'bg-amber-500' },
+  'Médio': { texto: 'text-yellow-700 dark:text-yellow-400', fundo: 'bg-yellow-500/10', dot: 'bg-yellow-500' },
+  'Baixo': { texto: 'text-emerald-700 dark:text-emerald-400', fundo: 'bg-emerald-500/10', dot: 'bg-emerald-500' },
+};
+
+function iniciais(nome: string): string {
+  const partes = nome.trim().split(/\s+/);
+  if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+  return (partes[0][0] + partes[1][0]).toUpperCase();
+}
+
+const PALETA_AVATAR = ['#C8933E', '#2563EB', '#7C3AED', '#DB2777', '#059669', '#EA580C', '#0891B2', '#DC2626'];
+
+function corAvatar(id: string): string {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  return PALETA_AVATAR[hash % PALETA_AVATAR.length];
 }
 
 export const CarteiraView: React.FC<CarteiraViewProps> = ({
@@ -39,6 +64,16 @@ export const CarteiraView: React.FC<CarteiraViewProps> = ({
   const [busca, setBusca] = useState('');
   const [filtroRisco, setFiltroRisco] = useState<NivelRisco | 'TODOS'>('TODOS');
   const [ordenacao, setOrdenacao] = useState<'urgencia' | 'faturamento' | 'descasamento'>('urgencia');
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
+  const [menuColunasAberto, setMenuColunasAberto] = useState(false);
+  const [menuAcoesAberto, setMenuAcoesAberto] = useState(false);
+  const [colunas, setColunas] = useState({ cnae: false, menorSaldo: true, descasamento: false });
+  const inputArquivoRef = useRef<HTMLInputElement>(null);
+  const menuColunasRef = useRef<HTMLDivElement>(null);
+  const menuAcoesRef = useRef<HTMLDivElement>(null);
+
+  useClickOutside(menuColunasRef, () => setMenuColunasAberto(false));
+  useClickOutside(menuAcoesRef, () => setMenuAcoesAberto(false));
 
   // Calcular projeção e risco para cada empresa
   const empresasComProjecao = useMemo(() => {
@@ -51,11 +86,11 @@ export const CarteiraView: React.FC<CarteiraViewProps> = ({
       );
       return {
         empresa,
-        projecao,
         risco: projecao.risco,
         primeiroCritico: projecao.cenarioBase.primeiroCritico,
         mesesAbaixoPiso: projecao.cenarioBase.mesesAbaixoPiso,
         menorSaldo: projecao.cenarioBase.menorSaldo,
+        saldos: projecao.cenarioBase.saldos,
         pontos: projecao.cenarioBase.pontos,
         descasamento: projecao.memoriaCalculo.descasamentoCiclo,
         choqueUnico: projecao.memoriaCalculo.choqueUnico,
@@ -63,34 +98,51 @@ export const CarteiraView: React.FC<CarteiraViewProps> = ({
     });
   }, [empresas, parametros]);
 
-  // Contadores Agregados de Cabeçalho Bento
-  const contadores = useMemo(() => {
-    let critico = 0;
-    let alto = 0;
-    let medio = 0;
-    let baixo = 0;
-    let totalChoque = 0;
-
+  // Métricas agregadas de carteira
+  const metricas = useMemo(() => {
+    const total = empresasComProjecao.length || 1;
+    const distribuicao = { 'Baixo': 0, 'Médio': 0, 'Alto': 0, 'Crítico': 0 } as Record<NivelRisco, number>;
+    let somaChoque = 0;
+    let somaDescasamento = 0;
     empresasComProjecao.forEach(item => {
-      if (item.risco.nivel === 'Crítico') critico++;
-      else if (item.risco.nivel === 'Alto') alto++;
-      else if (item.risco.nivel === 'Médio') medio++;
-      else baixo++;
-      totalChoque += item.choqueUnico;
+      distribuicao[item.risco.nivel]++;
+      somaChoque += item.choqueUnico;
+      somaDescasamento += item.descasamento;
     });
 
-    const percentualRisco = empresas.length > 0 ? Math.round(((critico + alto) / empresas.length) * 100) : 0;
+    const emRisco = distribuicao['Alto'] + distribuicao['Crítico'];
+    const resilientes = distribuicao['Baixo'] + distribuicao['Médio'];
+
+    const curvaMedia = Array.from({ length: 24 }, (_, i) => {
+      const soma = empresasComProjecao.reduce((acc, item) => acc + (item.saldos[i] ?? 0), 0);
+      return soma / total;
+    });
+
+    const descasamentosOrdenados = [...empresasComProjecao]
+      .sort((a, b) => a.descasamento - b.descasamento)
+      .map(item => ({
+        valor: Math.max(0, item.descasamento),
+        cor: item.descasamento > 15 ? '#DC2626' : '#C8933E',
+      }));
 
     return {
-      total: empresas.length,
-      critico,
-      alto,
-      medio,
-      baixo,
-      percentualRisco,
-      totalChoque
+      total: empresasComProjecao.length,
+      emRisco,
+      percentualRisco: Math.round((emRisco / total) * 100),
+      resilientes,
+      percentualResiliente: Math.round((resilientes / total) * 100),
+      choqueMedio: Math.round(somaChoque / total),
+      descasamentoMedio: Math.round(somaDescasamento / total),
+      curvaMedia,
+      barrasDistribuicao: [
+        { valor: distribuicao['Baixo'], cor: '#16A34A' },
+        { valor: distribuicao['Médio'], cor: '#EAB308' },
+        { valor: distribuicao['Alto'], cor: '#F59E0B' },
+        { valor: distribuicao['Crítico'], cor: '#DC2626' },
+      ],
+      barrasDescasamento: descasamentosOrdenados,
     };
-  }, [empresasComProjecao, empresas.length]);
+  }, [empresasComProjecao]);
 
   // Filtragem e Ordenação
   const listaFiltrada = useMemo(() => {
@@ -100,329 +152,356 @@ export const CarteiraView: React.FC<CarteiraViewProps> = ({
           item.empresa.nome.toLowerCase().includes(busca.toLowerCase()) ||
           item.empresa.ramo.toLowerCase().includes(busca.toLowerCase()) ||
           item.empresa.cnae.toLowerCase().includes(busca.toLowerCase());
-
         const matchesFiltro = filtroRisco === 'TODOS' || item.risco.nivel === filtroRisco;
         return matchesBusca && matchesFiltro;
       })
       .sort((a, b) => {
         if (ordenacao === 'urgencia') {
-          if (b.risco.ordem !== a.risco.ordem) {
-            return b.risco.ordem - a.risco.ordem;
-          }
+          if (b.risco.ordem !== a.risco.ordem) return b.risco.ordem - a.risco.ordem;
           const mesA = a.primeiroCritico ?? 999;
           const mesB = b.primeiroCritico ?? 999;
           return mesA - mesB;
         }
-        if (ordenacao === 'faturamento') {
-          return b.empresa.faturamentoMensal - a.empresa.faturamentoMensal;
-        }
-        if (ordenacao === 'descasamento') {
-          return b.descasamento - a.descasamento;
-        }
+        if (ordenacao === 'faturamento') return b.empresa.faturamentoMensal - a.empresa.faturamentoMensal;
+        if (ordenacao === 'descasamento') return b.descasamento - a.descasamento;
         return 0;
       });
   }, [empresasComProjecao, busca, filtroRisco, ordenacao]);
 
+  const todasSelecionadas = listaFiltrada.length > 0 && listaFiltrada.every(item => selecionados.has(item.empresa.id));
+
+  const toggleSelecionarTodas = () => {
+    if (todasSelecionadas) {
+      setSelecionados(new Set());
+    } else {
+      setSelecionados(new Set(listaFiltrada.map(item => item.empresa.id)));
+    }
+  };
+
+  const toggleSelecionar = (id: string) => {
+    setSelecionados(prev => {
+      const novo = new Set(prev);
+      if (novo.has(id)) novo.delete(id);
+      else novo.add(id);
+      return novo;
+    });
+  };
+
   return (
-    <div className="space-y-4">
-      {/* Bento Grid Top Panel */}
-      <div className="bg-superficie border border-line p-5">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-confirmacao animate-pulse"></span>
-              <span className="text-[10px] font-mono uppercase tracking-wider text-textoSecundario font-semibold">
-                Carteira Prioritária · Diagnóstico Transição LC 214/2025
-              </span>
-            </div>
-            <h1 className="text-xl font-bold uppercase tracking-tight text-textoPrimario mt-1">
-              Painel de Monitoramento da Carteira
-            </h1>
-            <p className="text-xs text-textoSecundario font-mono mt-0.5">
-              <span className="text-alerta font-bold font-mono">{contadores.critico + contadores.alto} empresas</span> com risco alto ou crítico na retenção do Split Payment
-            </p>
+    <div className="space-y-5">
+      {/* Cabeçalho da Página */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold text-textoPrimario">Carteira</h1>
+          <p className="text-sm text-textoSecundario mt-0.5">{metricas.total} empresas monitoradas na transição da Reforma</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onIniciarDemo20s}
+            className="px-3 py-2 bg-superficie border border-line rounded-lg text-xs font-medium text-textoSecundario hover:text-textoPrimario hover:border-acento/50 transition-colors flex items-center gap-1.5"
+          >
+            <Zap className="w-3.5 h-3.5 text-acento" />
+            <span>Tour Demo</span>
+          </button>
+          <button
+            type="button"
+            onClick={onNovaEmpresa}
+            className="px-3.5 py-2 bg-acento text-black rounded-lg text-xs font-semibold hover:opacity-90 transition-opacity flex items-center gap-1.5 shadow-sm"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Nova empresa</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Cartões de Métricas com Sparkline */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="bg-superficie border border-line rounded-xl p-4">
+          <div className="flex items-center justify-between text-textoSecundario mb-2">
+            <span className="text-xs font-medium">Empresas em Risco</span>
+            <AlertTriangle className="w-4 h-4 text-alerta" />
           </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={onIniciarDemo20s}
-              className="px-3 py-1.5 bg-superficie border border-acento text-acento font-mono font-bold text-xs hover:bg-acento hover:text-black transition-all flex items-center gap-1.5"
-            >
-              <Zap className="w-3.5 h-3.5" />
-              <span>TOUR DEMO 20s</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={onNovaEmpresa}
-              className="px-3 py-1.5 bg-acento text-black font-mono font-bold text-xs hover:opacity-90 transition-opacity flex items-center gap-1.5"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>NOVA EMPRESA</span>
-            </button>
+          <div className="flex items-end justify-between gap-2">
+            <div>
+              <div className="text-2xl font-semibold text-textoPrimario">{metricas.emRisco}</div>
+              <span className="text-[11px] text-textoSecundario">{metricas.percentualRisco}% da carteira</span>
+            </div>
+            <MiniBarras valores={metricas.barrasDistribuicao} />
           </div>
         </div>
 
-        {/* 4 Bento Metric Tiles */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1 bg-line p-1">
-          <div className="bg-superficie p-4 flex flex-col justify-between">
-            <div className="flex items-center justify-between text-textoSecundario">
-              <span className="text-[9px] font-mono uppercase tracking-wider">Taxa Exposição a Risco</span>
-              <AlertTriangle className="w-4 h-4 text-alerta" />
-            </div>
-            <div className="mt-2">
-              <div className="text-2xl font-mono font-bold text-textoPrimario">
-                {contadores.percentualRisco}%
-              </div>
-              <span className="text-[10px] font-mono text-alerta">
-                {contadores.critico + contadores.alto} empresas no limite
-              </span>
-            </div>
+        <div className="bg-superficie border border-line rounded-xl p-4">
+          <div className="flex items-center justify-between text-textoSecundario mb-2">
+            <span className="text-xs font-medium">Choque Médio no Split</span>
+            <Zap className="w-4 h-4 text-acento" />
           </div>
-
-          <div className="bg-superficie p-4 flex flex-col justify-between">
-            <div className="flex items-center justify-between text-textoSecundario">
-              <span className="text-[9px] font-mono uppercase tracking-wider">Float Médio no Split</span>
-              <Clock className="w-4 h-4 text-acento" />
+          <div className="flex items-end justify-between gap-2">
+            <div>
+              <div className="text-2xl font-semibold text-textoPrimario">R$ {(metricas.choqueMedio / 1000).toFixed(0)}k</div>
+              <span className="text-[11px] text-textoSecundario">Drenado na liquidação</span>
             </div>
-            <div className="mt-2">
-              <div className="text-2xl font-mono font-bold text-acento">
-                R$ {Math.round(contadores.totalChoque / (contadores.total || 1)).toLocaleString('pt-BR')}
-              </div>
-              <span className="text-[10px] font-mono text-textoSecundario">
-                Drenado na liquidação inicial
-              </span>
-            </div>
+            <MiniSparkline valores={metricas.curvaMedia} cor="#DC2626" />
           </div>
+        </div>
 
-          <div className="bg-superficie p-4 flex flex-col justify-between">
-            <div className="flex items-center justify-between text-textoSecundario">
-              <span className="text-[9px] font-mono uppercase tracking-wider">Status Crítico</span>
-              <AlertOctagon className="w-4 h-4 text-alerta" />
-            </div>
-            <div className="mt-2">
-              <div className="text-2xl font-mono font-bold text-alerta">
-                {String(contadores.critico).padStart(2, '0')}
-              </div>
-              <span className="text-[10px] font-mono text-textoSecundario">
-                Saldo negativo ou ≥8m no piso
-              </span>
-            </div>
+        <div className="bg-superficie border border-line rounded-xl p-4">
+          <div className="flex items-center justify-between text-textoSecundario mb-2">
+            <span className="text-xs font-medium">Resiliência da Carteira</span>
+            <ShieldCheck className="w-4 h-4 text-confirmacao" />
           </div>
+          <div className="flex items-end justify-between gap-2">
+            <div>
+              <div className="text-2xl font-semibold text-textoPrimario">{metricas.percentualResiliente}%</div>
+              <span className="text-[11px] text-textoSecundario">{metricas.resilientes} empresas estáveis</span>
+            </div>
+            <MiniSparkline valores={metricas.curvaMedia} cor="#16A34A" />
+          </div>
+        </div>
 
-          <div className="bg-superficie p-4 flex flex-col justify-between">
-            <div className="flex items-center justify-between text-textoSecundario">
-              <span className="text-[9px] font-mono uppercase tracking-wider">Resilientes</span>
-              <ShieldCheck className="w-4 h-4 text-confirmacao" />
+        <div className="bg-superficie border border-line rounded-xl p-4">
+          <div className="flex items-center justify-between text-textoSecundario mb-2">
+            <span className="text-xs font-medium">Descasamento Médio</span>
+            <Clock className="w-4 h-4 text-acento" />
+          </div>
+          <div className="flex items-end justify-between gap-2">
+            <div>
+              <div className="text-2xl font-semibold text-textoPrimario">{metricas.descasamentoMedio}d</div>
+              <span className="text-[11px] text-textoSecundario">Receb. vs pagamento</span>
             </div>
-            <div className="mt-2">
-              <div className="text-2xl font-mono font-bold text-confirmacao">
-                {String(contadores.baixo + contadores.medio).padStart(2, '0')}
-              </div>
-              <span className="text-[10px] font-mono text-confirmacao">
-                {Math.round(((contadores.baixo + contadores.medio) / (contadores.total || 1)) * 100)}% da carteira
-              </span>
-            </div>
+            <MiniBarras valores={metricas.barrasDescasamento} />
           </div>
         </div>
       </div>
 
-      {/* Bento Controls & Filter Strip */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-superficie p-3 border border-line">
-        <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[280px]">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 transform -translate-y-1/2 text-textoSecundario" />
+      {/* Barra de Ferramentas */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-textoSecundario" />
             <input
               type="text"
               placeholder="Buscar por nome, ramo ou CNAE..."
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 bg-superficieElevada border border-line text-xs font-mono text-textoPrimario placeholder:text-textoSecundario focus:outline-none focus:border-acento"
+              className="w-64 pl-8 pr-3 py-1.5 bg-superficie border border-line rounded-lg text-xs text-textoPrimario placeholder:text-textoSecundario focus:outline-none focus:border-acento"
             />
           </div>
 
-          {/* Chips de Risco */}
-          <div className="flex items-center gap-1 bg-superficieElevada p-0.5 border border-line">
+          <div className="flex items-center gap-1 bg-superficieElevada p-0.5 rounded-lg">
             {(['TODOS', 'Crítico', 'Alto', 'Médio', 'Baixo'] as const).map((nivel) => (
               <button
                 key={nivel}
                 type="button"
                 onClick={() => setFiltroRisco(nivel)}
-                className={`px-2.5 py-1 text-[11px] font-mono transition-colors ${
+                className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-colors ${
                   filtroRisco === nivel
-                    ? 'bg-acento text-black font-bold'
+                    ? 'bg-superficie text-textoPrimario shadow-sm'
                     : 'text-textoSecundario hover:text-textoPrimario'
                 }`}
               >
-                {nivel.toUpperCase()}
+                {nivel}
               </button>
             ))}
           </div>
-        </div>
 
-        {/* CSV & Ordenação */}
-        <div className="flex items-center gap-2 text-xs font-mono">
           <select
             value={ordenacao}
             onChange={(e) => setOrdenacao(e.target.value as any)}
-            className="px-2.5 py-1.5 bg-superficieElevada border border-line text-xs font-mono text-textoPrimario focus:outline-none focus:border-acento uppercase"
+            className="px-2.5 py-1.5 bg-superficie border border-line rounded-lg text-xs text-textoPrimario focus:outline-none focus:border-acento"
           >
-            <option value="urgencia">ORDENAR: URGÊNCIA</option>
-            <option value="faturamento">ORDENAR: FATURAMENTO</option>
-            <option value="descasamento">ORDENAR: DESCASAMENTO</option>
+            <option value="urgencia">Ordenar: Urgência</option>
+            <option value="faturamento">Ordenar: Faturamento</option>
+            <option value="descasamento">Ordenar: Descasamento</option>
           </select>
+        </div>
 
-          <label className="px-2.5 py-1.5 bg-superficieElevada border border-line hover:border-acento text-xs font-mono text-textoPrimario cursor-pointer transition-colors flex items-center gap-1">
-            <Upload className="w-3 h-3 text-textoSecundario" />
-            <span>IMPORTAR</span>
-            <input
-              type="file"
-              accept=".csv"
-              onChange={onImportarCSV}
-              className="hidden"
-            />
-          </label>
+        <div className="flex items-center gap-2">
+          {selecionados.size > 0 && (
+            <button
+              type="button"
+              onClick={() => onExportarCSV(empresasComProjecao.filter(i => selecionados.has(i.empresa.id)).map(i => i.empresa))}
+              className="px-2.5 py-1.5 bg-acento/10 text-acento rounded-lg text-xs font-medium hover:bg-acento/20 transition-colors"
+            >
+              {selecionados.size} selecionada{selecionados.size > 1 ? 's' : ''} · Exportar
+            </button>
+          )}
 
-          <button
-            type="button"
-            onClick={onExportarCSV}
-            className="px-2.5 py-1.5 bg-superficieElevada border border-line hover:border-acento text-xs font-mono text-textoPrimario transition-colors flex items-center gap-1"
-            title="Exportar Carteira em CSV"
-          >
-            <Download className="w-3 h-3 text-textoSecundario" />
-            <span>EXPORTAR</span>
-          </button>
+          {/* Menu de Colunas */}
+          <div className="relative" ref={menuColunasRef}>
+            <button
+              type="button"
+              onClick={() => setMenuColunasAberto(v => !v)}
+              className="px-2.5 py-1.5 bg-superficie border border-line rounded-lg text-xs text-textoSecundario hover:text-textoPrimario transition-colors flex items-center gap-1.5"
+            >
+              <Columns3 className="w-3.5 h-3.5" />
+              <span>Colunas</span>
+              <ChevronDown className="w-3 h-3" />
+            </button>
+            {menuColunasAberto && (
+              <div className="absolute right-0 top-full mt-1 w-48 bg-superficie border border-line rounded-lg shadow-lg p-1.5 z-30">
+                {([
+                  ['cnae', 'CNAE'],
+                  ['menorSaldo', 'Menor Saldo'],
+                  ['descasamento', 'Descasamento'],
+                ] as const).map(([chave, label]) => (
+                  <label key={chave} className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-superficieElevada cursor-pointer text-xs text-textoPrimario">
+                    <input
+                      type="checkbox"
+                      checked={colunas[chave]}
+                      onChange={() => setColunas(prev => ({ ...prev, [chave]: !prev[chave] }))}
+                      className="accent-acento"
+                    />
+                    <span>{label}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
 
-          <button
-            type="button"
-            onClick={onRestaurarPerfisPadrao}
-            className="px-2.5 py-1.5 bg-superficieElevada border border-line hover:border-acento text-xs font-mono text-textoSecundario hover:text-textoPrimario transition-colors"
-            title="Restaurar os 8 Perfis Oficiais"
-          >
-            PADRÕES
-          </button>
+          {/* Menu de Ações (Importar/Exportar/Restaurar) */}
+          <div className="relative" ref={menuAcoesRef}>
+            <button
+              type="button"
+              onClick={() => setMenuAcoesAberto(v => !v)}
+              className="px-2.5 py-1.5 bg-superficie border border-line rounded-lg text-xs text-textoSecundario hover:text-textoPrimario transition-colors flex items-center gap-1.5"
+            >
+              <span>Importar / Exportar</span>
+              <ChevronDown className="w-3 h-3" />
+            </button>
+            {menuAcoesAberto && (
+              <div className="absolute right-0 top-full mt-1 w-52 bg-superficie border border-line rounded-lg shadow-lg p-1.5 z-30">
+                <button
+                  type="button"
+                  onClick={() => { inputArquivoRef.current?.click(); setMenuAcoesAberto(false); }}
+                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-superficieElevada text-xs text-textoPrimario"
+                >
+                  <Upload className="w-3.5 h-3.5 text-textoSecundario" />
+                  <span>Importar CSV</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { onExportarCSV(); setMenuAcoesAberto(false); }}
+                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-superficieElevada text-xs text-textoPrimario"
+                >
+                  <Download className="w-3.5 h-3.5 text-textoSecundario" />
+                  <span>Exportar carteira (CSV)</span>
+                </button>
+                <div className="my-1 border-t border-line" />
+                <button
+                  type="button"
+                  onClick={() => { onRestaurarPerfisPadrao(); setMenuAcoesAberto(false); }}
+                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-superficieElevada text-xs text-textoSecundario"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Restaurar 8 perfis padrão</span>
+                </button>
+              </div>
+            )}
+            <input ref={inputArquivoRef} type="file" accept=".csv" onChange={onImportarCSV} className="hidden" />
+          </div>
         </div>
       </div>
 
-      {/* Bento Grid: Lista de Empresas */}
-      <div className="space-y-2">
-        {listaFiltrada.map(({ empresa, risco, primeiroCritico, mesesAbaixoPiso, menorSaldo, pontos, descasamento }) => {
-          const primeiroCriticoRotulo = primeiroCritico !== null ? pontos[primeiroCritico]?.rotulo : '-';
-          const ehCritico = risco.nivel === 'Crítico';
-          const ehAlto = risco.nivel === 'Alto';
-          const ehBaixo = risco.nivel === 'Baixo';
+      {/* Tabela */}
+      <div className="bg-superficie border border-line rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b border-line text-[11px] uppercase tracking-wide text-textoSecundario">
+                <th className="w-10 py-2.5 pl-4">
+                  <input type="checkbox" checked={todasSelecionadas} onChange={toggleSelecionarTodas} className="accent-acento" />
+                </th>
+                <th className="text-left py-2.5 px-2 font-medium">Empresa</th>
+                {colunas.cnae && <th className="text-left py-2.5 px-2 font-medium">CNAE</th>}
+                <th className="text-left py-2.5 px-2 font-medium">Risco</th>
+                <th className="text-right py-2.5 px-2 font-medium">Faturamento</th>
+                <th className="text-left py-2.5 px-2 font-medium">1ª Ruptura</th>
+                {colunas.menorSaldo && <th className="text-right py-2.5 px-2 font-medium">Menor Saldo</th>}
+                {colunas.descasamento && <th className="text-right py-2.5 px-2 font-medium">Descasamento</th>}
+                <th className="w-10 py-2.5 pr-4" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-line">
+              {listaFiltrada.map(({ empresa, risco, primeiroCritico, menorSaldo, pontos, descasamento }) => {
+                const rotuloRuptura = primeiroCritico !== null ? pontos[primeiroCritico]?.rotulo : null;
+                const cores = CORES_RISCO[risco.nivel];
 
-          const borderColor = ehCritico ? 'border-l-4 border-l-alerta' :
-            ehAlto ? 'border-l-4 border-l-amber-500' :
-            ehBaixo ? 'border-l-4 border-l-confirmacao' : 'border-l-4 border-l-yellow-500';
-
-          return (
-            <div
-              key={empresa.id}
-              onClick={() => onSelecionarEmpresa(empresa)}
-              className={`bg-superficie hover:bg-superficieElevada border border-line ${borderColor} p-4 transition-all cursor-pointer group`}
-            >
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                {/* Coluna 1: Nome & CNAE */}
-                <div className="lg:w-1/3">
-                  <div className="flex items-center justify-between sm:justify-start gap-2.5">
-                    <h3 className="text-sm font-bold uppercase tracking-tight text-textoPrimario group-hover:text-acento transition-colors">
-                      {empresa.nome}
-                    </h3>
-                    <span className={`text-[10px] font-mono font-bold uppercase px-1.5 py-0.5 ${
-                      ehCritico ? 'text-alerta bg-alerta/10' :
-                      ehAlto ? 'text-amber-500 bg-amber-500/10' :
-                      ehBaixo ? 'text-confirmacao bg-confirmacao/10' :
-                      'text-yellow-500 bg-yellow-500/10'
-                    }`}>
-                      {risco.nivel}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2 text-[11px] text-textoSecundario font-mono mt-1">
-                    <span>{empresa.ramo}</span>
-                    <span>·</span>
-                    <span>CNAE {empresa.cnae}</span>
-                    <span>·</span>
-                    <span>FAT R$ {(empresa.faturamentoMensal / 1000).toFixed(0)}k/m</span>
-                  </div>
-                </div>
-
-                {/* Coluna 2: 24 Meses Heatmap Segmentado */}
-                <div className="lg:w-1/3">
-                  <div className="flex items-center justify-between text-[10px] font-mono text-textoSecundario mb-1">
-                    <span>MESES NO RISCO: {String(mesesAbaixoPiso).padStart(2, '0')}</span>
-                    <span className={mesesAbaixoPiso > 0 ? 'text-alerta font-bold' : 'text-confirmacao'}>
-                      {primeiroCriticoRotulo !== '-' ? `RUPTURA: ${primeiroCriticoRotulo.toUpperCase()}` : 'SEGURO'}
-                    </span>
-                  </div>
-
-                  <div className="flex h-2.5 gap-0.5 bg-fundo p-0.5 border border-line">
-                    {pontos.map((p, i) => (
-                      <div
-                        key={i}
-                        title={`${p.rotulo}: Saldo R$ ${p.saldo.toLocaleString('pt-BR')} ${p.abaixoPiso ? '(Abaixo do piso!)' : ''}`}
-                        className={`flex-1 transition-colors ${
-                          p.saldo < 0 ? 'bg-red-600' :
-                          p.abaixoPiso ? 'bg-alerta' :
-                          p.ehMesSplit ? 'bg-acento' :
-                          'bg-confirmacao/50'
-                        }`}
+                return (
+                  <tr
+                    key={empresa.id}
+                    onClick={() => onSelecionarEmpresa(empresa)}
+                    className="hover:bg-superficieElevada/60 transition-colors cursor-pointer group"
+                  >
+                    <td className="py-2.5 pl-4" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selecionados.has(empresa.id)}
+                        onChange={() => toggleSelecionar(empresa.id)}
+                        className="accent-acento"
                       />
-                    ))}
-                  </div>
-
-                  <div className="flex justify-between text-[9px] font-mono text-textoSecundario mt-1">
-                    <span>AGO/26</span>
-                    <span className="text-acento font-bold">JUL/27 (SPLIT)</span>
-                    <span>JUL/28</span>
-                  </div>
-                </div>
-
-                {/* Coluna 3: Indicadores e Ação */}
-                <div className="lg:w-1/3 flex items-center justify-between lg:justify-end gap-6 pt-2 lg:pt-0 border-t lg:border-t-0 border-line">
-                  <div className="text-left lg:text-right">
-                    <span className="text-[9px] font-mono uppercase text-textoSecundario block">1º Ruptura</span>
-                    <span className={`text-xs font-mono font-bold ${primeiroCritico !== null ? 'text-alerta' : 'text-confirmacao'}`}>
-                      {primeiroCriticoRotulo.toUpperCase()}
-                    </span>
-                  </div>
-
-                  <div className="text-left lg:text-right">
-                    <span className="text-[9px] font-mono uppercase text-textoSecundario block">Menor Saldo</span>
-                    <span className={`text-xs font-mono font-bold ${menorSaldo < 0 ? 'text-alerta' : (menorSaldo < empresa.custoOperacional ? 'text-alerta' : 'text-textoPrimario')}`}>
-                      R$ {menorSaldo.toLocaleString('pt-BR')}
-                    </span>
-                  </div>
-
-                  <div className="text-left lg:text-right hidden sm:block">
-                    <span className="text-[9px] font-mono uppercase text-textoSecundario block">Descasamento</span>
-                    <span className={`text-xs font-mono font-bold ${descasamento > 15 ? 'text-alerta' : 'text-textoPrimario'}`}>
-                      {descasamento > 0 ? `+${descasamento}` : descasamento}d
-                    </span>
-                  </div>
-
-                  <div className="p-1.5 bg-superficieElevada border border-line group-hover:bg-acento group-hover:text-black text-textoSecundario transition-all">
-                    <ArrowRight className="w-4 h-4" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+                    </td>
+                    <td className="py-2.5 px-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold text-white shrink-0"
+                          style={{ backgroundColor: corAvatar(empresa.id) }}
+                        >
+                          {iniciais(empresa.nome)}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-medium text-textoPrimario truncate">{empresa.nome}</div>
+                          <div className="text-[11px] text-textoSecundario truncate">{empresa.ramo}</div>
+                        </div>
+                      </div>
+                    </td>
+                    {colunas.cnae && (
+                      <td className="py-2.5 px-2 text-xs text-textoSecundario whitespace-nowrap">{empresa.cnae}</td>
+                    )}
+                    <td className="py-2.5 px-2">
+                      <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${cores.fundo} ${cores.texto}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${cores.dot}`} />
+                        {risco.nivel}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-2 text-right text-xs text-textoPrimario whitespace-nowrap">
+                      R$ {(empresa.faturamentoMensal / 1000).toFixed(0)}k
+                    </td>
+                    <td className="py-2.5 px-2 text-xs whitespace-nowrap">
+                      {rotuloRuptura ? (
+                        <span className="text-alerta font-medium">{rotuloRuptura}</span>
+                      ) : (
+                        <span className="text-confirmacao">Seguro</span>
+                      )}
+                    </td>
+                    {colunas.menorSaldo && (
+                      <td className={`py-2.5 px-2 text-right text-xs whitespace-nowrap ${menorSaldo < 0 ? 'text-alerta font-medium' : 'text-textoPrimario'}`}>
+                        R$ {menorSaldo.toLocaleString('pt-BR')}
+                      </td>
+                    )}
+                    {colunas.descasamento && (
+                      <td className={`py-2.5 px-2 text-right text-xs whitespace-nowrap ${descasamento > 15 ? 'text-alerta font-medium' : 'text-textoPrimario'}`}>
+                        {descasamento > 0 ? `+${descasamento}` : descasamento}d
+                      </td>
+                    )}
+                    <td className="py-2.5 pr-4">
+                      <ChevronRight className="w-4 h-4 text-textoSecundario group-hover:text-acento transition-colors" />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
 
         {listaFiltrada.length === 0 && (
-          <div className="bg-superficie border border-line p-12 text-center">
-            <Building2 className="w-10 h-10 text-textoSecundario/40 mx-auto mb-2" />
-            <h4 className="text-sm font-mono uppercase font-bold text-textoPrimario">Nenhuma empresa encontrada</h4>
-            <p className="text-xs font-mono text-textoSecundario mt-1">
-              Verifique os filtros ou adicione uma nova empresa à carteira.
-            </p>
+          <div className="py-16 text-center">
+            <Building2 className="w-8 h-8 text-textoSecundario/40 mx-auto mb-2" />
+            <h4 className="text-sm font-medium text-textoPrimario">Nenhuma empresa encontrada</h4>
+            <p className="text-xs text-textoSecundario mt-1">Verifique os filtros ou adicione uma nova empresa à carteira.</p>
           </div>
         )}
       </div>
     </div>
   );
 };
-

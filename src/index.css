@@ -1,31 +1,31 @@
 @import "tailwindcss";
 
 :root {
-  --color-fundo: #0E1A24;
-  --color-superficie: #16242F;
-  --color-superficie-elevada: #1E3040;
-  --color-line: #2C4254;
-  --color-texto-primario: #F0F4F7;
-  --color-texto-secundario: #8FA3B3;
+  --color-fundo: #0B1220;
+  --color-superficie: #131B2C;
+  --color-superficie-elevada: #1B2438;
+  --color-line: #29334A;
+  --color-texto-primario: #F3F5F8;
+  --color-texto-secundario: #8B95AB;
   --color-acento: #D4A24C;
-  --color-alerta: #C4552F;
-  --color-confirmacao: #4A9188;
+  --color-alerta: #E5533A;
+  --color-confirmacao: #34B27A;
 }
 
 .tema-claro {
-  --color-fundo: #EDF2F7;
+  --color-fundo: #F6F7F9;
   --color-superficie: #FFFFFF;
-  --color-superficie-elevada: #E2E8F0;
-  --color-line: #CBD5E1;
-  --color-texto-primario: #0E1A24;
-  --color-texto-secundario: #475569;
-  --color-acento: #C59132;
-  --color-alerta: #C4552F;
-  --color-confirmacao: #2D7A70;
+  --color-superficie-elevada: #F3F4F6;
+  --color-line: #E7E9ED;
+  --color-texto-primario: #101828;
+  --color-texto-secundario: #667085;
+  --color-acento: #C8933E;
+  --color-alerta: #DC2626;
+  --color-confirmacao: #16A34A;
 }
 
 @theme {
-  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --color-fundo: var(--color-fundo);
   --color-superficie: var(--color-superficie);
@@ -38,14 +38,18 @@
   --color-confirmacao: var(--color-confirmacao);
 }
 
-/* Custom scrollbars for Bento terminal aesthetic */
+body {
+  background: var(--color-fundo);
+}
+
+/* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-fundo);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -55,4 +59,14 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-acento);
+}
+
+/* Accordion expand/collapse */
+@keyframes conteudo-expandir {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animar-expandir {
+  animation: conteudo-expandir 0.15s ease-out;
 }
