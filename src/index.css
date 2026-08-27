@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+:root {
+  --color-fundo: #0E1A24;
+  --color-superficie: #16242F;
+  --color-superficie-elevada: #1E3040;
+  --color-line: #2C4254;
+  --color-texto-primario: #F0F4F7;
+  --color-texto-secundario: #8FA3B3;
+  --color-acento: #D4A24C;
+  --color-alerta: #C4552F;
+  --color-confirmacao: #4A9188;
+}
+
+.tema-claro {
+  --color-fundo: #EDF2F7;
+  --color-superficie: #FFFFFF;
+  --color-superficie-elevada: #E2E8F0;
+  --color-line: #CBD5E1;
+  --color-texto-primario: #0E1A24;
+  --color-texto-secundario: #475569;
+  --color-acento: #C59132;
+  --color-alerta: #C4552F;
+  --color-confirmacao: #2D7A70;
+}
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --color-fundo: var(--color-fundo);
+  --color-superficie: var(--color-superficie);
+  --color-superficieElevada: var(--color-superficie-elevada);
+  --color-line: var(--color-line);
+  --color-textoPrimario: var(--color-texto-primario);
+  --color-textoSecundario: var(--color-texto-secundario);
+  --color-acento: var(--color-acento);
+  --color-alerta: var(--color-alerta);
+  --color-confirmacao: var(--color-confirmacao);
+}
+
+/* Custom scrollbars for Bento terminal aesthetic */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-fundo);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-acento);
+}

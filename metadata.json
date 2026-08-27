@@ -1,0 +1,6 @@
+{
+  "name": "Mirante Tax",
+  "description": "Ferramenta de projeção de capital de giro e impacto do split payment na transição da Reforma Tributária do Consumo para escritórios contábeis e PMEs.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
